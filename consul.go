@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/gozix/viper"
+	"github.com/gozix/viper/v2"
 	"github.com/hashicorp/consul/api"
-	"github.com/sarulabs/di"
+	"github.com/sarulabs/di/v2"
 )
 
 type (
