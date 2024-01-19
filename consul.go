@@ -17,7 +17,18 @@ import (
 )
 
 // Bundle implements the glue.Bundle interface.
-type Bundle struct{}
+type (
+	// Option interface.
+	Option interface {
+		apply(bundle *Bundle)
+	}
+	Bundle struct {
+		configEnvAddress string
+	}
+
+	// optionFunc wraps a func, so it satisfies the Option interface.
+	optionFunc func(bundle *Bundle)
+)
 
 // BundleName is default definition name.
 const BundleName = "consul"
@@ -28,6 +39,24 @@ var _ glue.Bundle = (*Bundle)(nil)
 // NewBundle create bundle instance.
 func NewBundle() *Bundle {
 	return new(Bundle)
+}
+
+// NewBundleWithConfig create bundle instance with config.
+func NewBundleWithConfig(options ...Option) *Bundle {
+	var bundle = Bundle{}
+
+	for _, option := range options {
+		option.apply(&bundle)
+	}
+
+	return &bundle
+}
+
+// EnvAddress option.
+func EnvAddress(value string) Option {
+	return optionFunc(func(bundle *Bundle) {
+		bundle.configEnvAddress = value
+	})
 }
 
 func (b *Bundle) Name() string {
@@ -46,10 +75,15 @@ func (b *Bundle) DependsOn() []string {
 
 func (b *Bundle) provideClient(cfg *viper.Viper) (*api.Client, error) {
 	var c = api.DefaultConfig()
-	c.Address = net.JoinHostPort(
-		cfg.GetString(fmt.Sprintf("%s.host", BundleName)),
-		cfg.GetString(fmt.Sprintf("%s.port", BundleName)),
-	)
+
+	if len(b.configEnvAddress) == 0 {
+		c.Address = net.JoinHostPort(
+			cfg.GetString(fmt.Sprintf("%s.host", BundleName)),
+			cfg.GetString(fmt.Sprintf("%s.port", BundleName)),
+		)
+	} else {
+		c.Address = cfg.GetString(b.configEnvAddress)
+	}
 
 	var key = fmt.Sprintf("%s.datacenter", BundleName)
 	if cfg.IsSet(key) {
@@ -72,4 +106,9 @@ func (b *Bundle) provideClient(cfg *viper.Viper) (*api.Client, error) {
 	}
 
 	return api.NewClient(c)
+}
+
+// apply implements Option.
+func (f optionFunc) apply(bundle *Bundle) {
+	f(bundle)
 }
