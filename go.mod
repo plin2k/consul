@@ -1,4 +1,4 @@
-module github.com/gozix/consul/v3
+module github.com/plin2k/consul/v3
 
 go 1.18
 
