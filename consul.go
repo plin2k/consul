@@ -63,8 +63,8 @@ func (b *Bundle) provideClient(cfg *viper.Viper) (*api.Client, error) {
 	if host != "" && port != "" {
 		c.Address = net.JoinHostPort(host, port)
 	}
-	
-	var key = fmt.Sprintf("%s.datacenter", BundleName)
+
+	key = fmt.Sprintf("%s.datacenter", BundleName)
 	if cfg.IsSet(key) {
 		c.Datacenter = cfg.GetString(key)
 	}
