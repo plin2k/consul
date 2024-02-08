@@ -45,12 +45,25 @@ func (b *Bundle) DependsOn() []string {
 }
 
 func (b *Bundle) provideClient(cfg *viper.Viper) (*api.Client, error) {
-	var c = api.DefaultConfig()
-	c.Address = net.JoinHostPort(
-		cfg.GetString(fmt.Sprintf("%s.host", BundleName)),
-		cfg.GetString(fmt.Sprintf("%s.port", BundleName)),
+	var (
+		c          = api.DefaultConfig()
+		host, port string
 	)
 
+	var key = fmt.Sprintf("%s.host", BundleName)
+	if cfg.IsSet(key) {
+		host = cfg.GetString(key)
+	}
+
+	key = fmt.Sprintf("%s.port", BundleName)
+	if cfg.IsSet(key) {
+		port = cfg.GetString(key)
+	}
+
+	if host != "" && port != "" {
+		c.Address = net.JoinHostPort(host, port)
+	}
+	
 	var key = fmt.Sprintf("%s.datacenter", BundleName)
 	if cfg.IsSet(key) {
 		c.Datacenter = cfg.GetString(key)
